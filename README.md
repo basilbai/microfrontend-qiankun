@@ -1,6 +1,6 @@
 ## 简介
 
-基于`single-spa`的实现库`qiankun`搭建的微前端架构实例,主应用为`React`,子应用接入`React`/`Vue`/`Angular`主流前端框架。
+基于`single-spa`的实现库`qiankun`搭建的微前端架构实例,主应用为`React`,子应用接入`React`/`Vue`/`Angular`/`jQuery `主流前端框架。
 
 ## 什么是微前端
 
@@ -136,7 +136,7 @@ runAfterFirstMounted(() => {
 
 #### 在 `src` 目录新增 `public-path.js`：
 
-```
+```js
 if (window.__POWERED_BY_QIANKUN__) {
   __webpack_public_path__ = window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__;
 }
