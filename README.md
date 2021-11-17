@@ -18,7 +18,7 @@
 ### 目录结构
 
 ```js
-micro-fed-qiankun
+microfrontend-qiankun
 ├── angular-app  // Angular 微应用
 ├── micro-main   // 主应用
 ├── react-app    // React 微应用
