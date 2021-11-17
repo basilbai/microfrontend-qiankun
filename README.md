@@ -1,6 +1,6 @@
 ## 简介
 
-基于`single-spa`的实现库`qiankun`搭建的微前端架构实例,主应用为`React`,子应用接入`React`/`Vue`/`Angular`/`jQuery `主流前端框架。
+基于`single-spa`的实现库`qiankun`搭建的微前端架构示例,主应用为`React`,子应用接入`React`/`Vue`/`Angular`/`jQuery `主流前端框架。
 
 ## 什么是微前端
 
@@ -23,6 +23,7 @@ microfrontend-qiankun
 ├── micro-main   // 主应用
 ├── react-app    // React 微应用
 ├── vue-app      // Vue 微应用
+├── jQuery-app   // jQuery微应用
 ```
 
 ### 技术栈
@@ -30,9 +31,18 @@ microfrontend-qiankun
 - `qiankun: 2.5.1`
 - `react: 17.0.2`
 - `vue: 2.6.11`
-- `angular: 13.0.0`
+- `angular: 13.0.1`
+- `jQuery: 2.2.4`
 
-## 配置参考
+
+React project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app)
+
+Vue project was generated with [Vue CLI](https://cli.vuejs.org/)
+
+Angular project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 13.0.1
+
+
+## 🚀🚀🚀配置记录🚀🚀🚀
 
 ### 🚀 主应用
 
