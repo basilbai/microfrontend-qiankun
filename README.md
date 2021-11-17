@@ -221,8 +221,171 @@ module.exports = {
 
 ```
 3. 修改 `package.json`：
-```
+```js
   "start": "rescripts start",
   "build": "rescripts build",
   "test": "rescripts test",
+```
+### 🚀Vue 微应用
+
+#### 在 `src` 目录新增 `public-path.js`：
+
+```js
+if (window.__POWERED_BY_QIANKUN__) {
+  __webpack_public_path__ = window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__;
+}
+```
+
+#### 修改入口文件 [vue-app/src/main.js](https://github.com/basilbai/micro-fed/blob/master/vue-app/src/main.js)
+
+```js
+import "./public-path";
+import Vue from "vue";
+import App from "./App.vue";
+
+let instance = null;
+
+Vue.config.productionTip = false;
+
+function render(props = {}) {
+  const { container } = props;
+
+  instance = new Vue({
+    render: (h) => h(App),
+  }).$mount(container ? container.querySelector("#app") : "#app");
+}
+
+// 独立运行时
+if (!window.__POWERED_BY_QIANKUN__) {
+  render();
+}
+
+export async function bootstrap() {
+  console.log("[vue] vue app bootstraped");
+}
+export async function mount(props) {
+  console.log("[vue] props from main framework", props);
+  render(props);
+}
+export async function unmount() {
+  instance.$destroy();
+  instance.$el.innerHTML = "";
+  instance = null;
+}
+```
+
+### 修改打包配置 `vue.config.js`
+
+```js
+const { name } = require('./package');
+module.exports = {
+  devServer: {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+  },
+  configureWebpack: {
+    output: {
+      library: `${name}-[name]`,
+      libraryTarget: 'umd', // 把微应用打包成 umd 库格式
+      jsonpFunction: `webpackJsonp_${name}`,
+    },
+  },
+};
+```
+### 🚀Vue 微应用
+
+1. 在 `src` 目录新增 `public-path.js`：
+
+```js
+if (window.__POWERED_BY_QIANKUN__) {
+  // eslint-disable-next-line no-undef
+  __webpack_public_path__ = window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__;
+}
+```
+2. 设置 `history` 模式路由的 `base`，`src/app/app-routing.module.ts` 文件：
+```js
+import { APP_BASE_HREF } from '@angular/common';
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule],
+  // @ts-ignore
+ providers: [{ provide: APP_BASE_HREF, useValue: window.__POWERED_BY_QIANKUN__ ? '/app-angular' : '/' }]
+})
+```
+3. 修改入口文件，`src/main.ts` 文件。
+```js
+import './public-path';
+import { enableProdMode, NgModuleRef } from '@angular/core';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { AppModule } from './app/app.module';
+import { environment } from './environments/environment';
+
+if (environment.production) {
+  enableProdMode();
+}
+
+let app: void | NgModuleRef<AppModule>;
+async function render() {
+  app = await platformBrowserDynamic()
+    .bootstrapModule(AppModule)
+    .catch((err) => console.error(err));
+}
+if (!(window as any).__POWERED_BY_QIANKUN__) {
+  render();
+}
+
+export async function bootstrap(props: Object) {
+  console.log(props);
+}
+
+export async function mount(props: Object) {
+  render();
+}
+
+export async function unmount(props: Object) {
+  console.log(props);
+  // @ts-ignore
+  app.destroy();
+}
+```
+
+4. 修改 `webpack` 打包配置
+
+先安装 `@angular-builders/custom-webpack` 插件
+
+```
+npm i @angular-builders/custom-webpack@9.2.0 -D
+```
+
+在根目录增加 `custom-webpack.config.js`
+```js
+const appName = require('./package.json').name;
+module.exports = {
+  devServer: {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+  },
+  output: {
+    library: `${appName}-[name]`,
+    libraryTarget: 'umd',
+    jsonpFunction: `webpackJsonp_${appName}`,
+  },
+};
+```
+修改 `angular.json`，将 `[packageName] > architect > build > builder` 和 `[packageName] > architect > serve > builder `的值改为我们安装的插件，将我们的打包配置文件加入到 `[packageName] > architect > build > options。`
+
+```diff
+- "builder": "@angular-devkit/build-angular:browser",
++ "builder": "@angular-builders/custom-webpack:browser",
+  "options": {
++    "customWebpackConfig": {
++      "path": "./custom-webpack.config.js"
++    }
+  }
+```
+```diff
+- "builder": "@angular-devkit/build-angular:dev-server",
++ "builder": "@angular-builders/custom-webpack:dev-server",
 ```
