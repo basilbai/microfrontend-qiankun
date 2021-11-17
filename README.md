@@ -1,6 +1,6 @@
 ## 简介
 
-使用基于`single-spa`的微前端实现库`qiankun`搭建的微前端架构,子应用接入`React`/`Vue`/`Angular`主流前端框架。
+基于`single-spa`的实现库`qiankun`搭建的微前端架构实例,主应用为`React`,子应用接入`React`/`Vue`/`Angular`主流前端框架。
 
 ## 什么是微前端
 
@@ -186,12 +186,17 @@ export async function unmount(props) {
 }
 
 ```
+
 #### 修改 `webpack` 配置
-1. 安装`@rescripts/cli`插件 
+
+1. 安装`@rescripts/cli`插件
+
 ```
 npm i -D @rescripts/cli
 ```
+
 2. 根目录新增 `.rescriptsrc.js`：
+
 ```js
 const { name } = require("./package");
 
@@ -220,12 +225,15 @@ module.exports = {
 };
 
 ```
+
 3. 修改 `package.json`：
+
 ```js
   "start": "rescripts start",
   "build": "rescripts build",
   "test": "rescripts test",
 ```
+
 ### 🚀Vue 微应用
 
 #### 在 `src` 目录新增 `public-path.js`：
@@ -293,7 +301,8 @@ module.exports = {
   },
 };
 ```
-### 🚀Vue 微应用
+
+### 🚀Angular 微应用
 
 1. 在 `src` 目录新增 `public-path.js`：
 
@@ -303,7 +312,9 @@ if (window.__POWERED_BY_QIANKUN__) {
   __webpack_public_path__ = window.__INJECTED_PUBLIC_PATH_BY_QIANKUN__;
 }
 ```
+
 2. 设置 `history` 模式路由的 `base`，`src/app/app-routing.module.ts` 文件：
+
 ```js
 import { APP_BASE_HREF } from '@angular/common';
 @NgModule({
@@ -313,7 +324,9 @@ import { APP_BASE_HREF } from '@angular/common';
  providers: [{ provide: APP_BASE_HREF, useValue: window.__POWERED_BY_QIANKUN__ ? '/app-angular' : '/' }]
 })
 ```
+
 3. 修改入口文件，`src/main.ts` 文件。
+
 ```js
 import './public-path';
 import { enableProdMode, NgModuleRef } from '@angular/core';
@@ -359,6 +372,7 @@ npm i @angular-builders/custom-webpack@9.2.0 -D
 ```
 
 在根目录增加 `custom-webpack.config.js`
+
 ```js
 const appName = require('./package.json').name;
 module.exports = {
@@ -374,7 +388,8 @@ module.exports = {
   },
 };
 ```
-修改 `angular.json`，将 `[packageName] > architect > build > builder` 和 `[packageName] > architect > serve > builder `的值改为我们安装的插件，将我们的打包配置文件加入到 `[packageName] > architect > build > options。`
+
+修改 `angular.json`，将 `[packageName] > architect > build > builder` 和 `[packageName] > architect > serve > builder`的值改为我们安装的插件，将我们的打包配置文件加入到 `[packageName] > architect > build > options。`
 
 ```diff
 - "builder": "@angular-devkit/build-angular:browser",
@@ -385,7 +400,65 @@ module.exports = {
 +    }
   }
 ```
+
 ```diff
 - "builder": "@angular-devkit/build-angular:dev-server",
 + "builder": "@angular-builders/custom-webpack:dev-server",
 ```
+
+### 🚀 非 webpack 构建的微应用
+
+一些非`webpack` 构建的项目，例如 `jQuery` 项目、`jsp` 项目，都可以按照这个处理。
+
+接入之前请确保你的项目里的图片、音视频等资源能正常加载，如果这些资源的地址都是完整路径（例如 `https://qiankun.umijs.org/logo.png）`，则没问题。如果都是相对路径，需要先将这些资源上传到服务器，使用完整路径。
+
+接入非常简单，只需要额外声明一个 `script`，用于 `export` 相对应的 `lifecycles`。例如:
+
+1. 声明 `entry` 入口
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purehtml Example</title>
+</head>
+<body>
+  <div>
+    Purehtml Example
+  </div>
+</body>
+ <script src="./entry.js" entry></script>
+</html>
+```
+
+2. 在 `entry js` 里声明 `lifecycles`
+
+```js
+const render = ($) => {
+  $('#purehtml-container').html('Hello, render with jQuery');
+  return Promise.resolve();
+};
+
+((global) => {
+  global['purehtml'] = {
+    bootstrap: () => {
+      console.log('purehtml bootstrap');
+      return Promise.resolve();
+    },
+    mount: () => {
+      console.log('purehtml mount');
+      return render($);
+    },
+    unmount: () => {
+      console.log('purehtml unmount');
+      return Promise.resolve();
+    },
+  };
+})(window);
+```
+
+> 由于 `qiankun` 是通过 `fetch` 去获取微应用的引入的静态资源的，所以必须要求这些静态资源支持[跨域](https://developer.mozilla.org/zh/docs/Web/HTTP/Access_control_CORS)。
+>
+> 如果是自己的脚本，可以通过开发服务端跨域来支持。如果是三方脚本且无法为其添加跨域头，可以将脚本拖到本地，由自己的服务器 `serve` 来支持跨域。
